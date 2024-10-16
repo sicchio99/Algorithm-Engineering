@@ -50,13 +50,36 @@ def estimate_inverse_centrality(G, k):
 
         # Aggiorna la stima della centralità per ciascun nodo u
         for u in G.nodes():
-            centrality_estimates[u] += distances[u] / (k * (n - 1))
+            centrality_estimates[u] += (n / (n - 1)) * distances[u] / (k * (n - 1))
 
     # L'inversa della centralità è la media delle distanze
     inverse_centralities = {u: 1 / estimate if estimate != 0 else float('inf')
                             for u, estimate in centrality_estimates.items()}
 
     return inverse_centralities
+
+
+def rename_vertices_by_average_distance(G, k):
+    """
+    Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento.
+    """
+    # Step 1: Stima della distanza media (inversa della centralità)
+    avg_distances = estimate_inverse_centrality(G, k)
+
+    # Stampa i primi 10 risultati come esempio
+    for node in list(avg_distances.keys())[:10]:
+        print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
+
+    # Step 2: Ordina i vertici in base alla distanza media (crescente)
+    sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
+    print(sorted_vertices[:10])
+
+    # Step 3: Rinominazione dei vertici da v1 a vk
+    renamed_vertices = {}
+    for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
+        renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
+
+    return renamed_vertices
 
 
 num_nodes = 100000
@@ -81,10 +104,22 @@ plt.show()
 """
 
 k = int(np.log2(num_nodes))  # Numero di iterazioni basato su log2(n)
+print("Valore K:", k)
 
+"""
 # Esegui l'algoritmo RAND per stimare la centralità
 inverse_centralities = estimate_inverse_centrality(G, k)
 
 # Stampa i primi 10 risultati come esempio
-for node in list(inverse_centralities.keys())[:10]:
+for node in list(inverse_centralities.keys())[:16]:  # originale 10
     print(f"Node {node}, Estimated Inverse Centrality: {inverse_centralities[node]}")
+"""
+
+# Rinominazione dei vertici
+renamed_vertices = rename_vertices_by_average_distance(G, k)
+
+# Stampa i vertici rinominati con la loro distanza media
+for i, (vertex, info) in enumerate(renamed_vertices.items()):
+    if i >= 10:  # Limita a 10 elementi
+        break
+    print(f"{vertex}: Nome originale: {info['vertex_name']}, Distanza media: {info['avg_distance']}")
