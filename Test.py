@@ -1,6 +1,6 @@
 import networkx as nx
 import random
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -79,7 +79,7 @@ def rename_vertices_by_average_distance(G, k):
     for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
         renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
 
-    return renamed_vertices
+    return renamed_vertices, sorted_vertices  # ritornare sorted_vertices per i calcolo di vk
 
 
 num_nodes = 100000
@@ -106,20 +106,17 @@ plt.show()
 k = int(np.log2(num_nodes))  # Numero di iterazioni basato su log2(n)
 print("Valore K:", k)
 
-"""
-# Esegui l'algoritmo RAND per stimare la centralità
-inverse_centralities = estimate_inverse_centrality(G, k)
-
-# Stampa i primi 10 risultati come esempio
-for node in list(inverse_centralities.keys())[:16]:  # originale 10
-    print(f"Node {node}, Estimated Inverse Centrality: {inverse_centralities[node]}")
-"""
-
 # Rinominazione dei vertici
-renamed_vertices = rename_vertices_by_average_distance(G, k)
+renamed_vertices, sorted_vertices = rename_vertices_by_average_distance(G, k)
 
 # Stampa i vertici rinominati con la loro distanza media
 for i, (vertex, info) in enumerate(renamed_vertices.items()):
     if i >= 10:  # Limita a 10 elementi
         break
     print(f"{vertex}: Nome originale: {info['vertex_name']}, Distanza media: {info['avg_distance']}")
+
+# sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
+vk = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
+print(f"Il vertice v_k è: {vk[0]}, con distanza stimata: {vk[1]}")
+
+
