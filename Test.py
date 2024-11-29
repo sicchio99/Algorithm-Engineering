@@ -40,11 +40,13 @@ def estimate_inverse_centrality(G, k):
     """
     n = G.number_of_nodes()
     centrality_estimates = {node: 0 for node in G.nodes()}
+    sampled_nodes = []  # Lista dei nodi campionati
 
     # Esegui k iterazioni per stimare l'inversa della centralità
     for i in range(k):
         # Seleziona un nodo casuale come sorgente
         vi = random.choice(list(G.nodes()))
+        sampled_nodes.append(vi)  # Salva il nodo campionato
         # Risolvi il problema del SSSP per il nodo vi
         distances = compute_sssp(G, vi)
 
@@ -56,7 +58,7 @@ def estimate_inverse_centrality(G, k):
     inverse_centralities = {u: 1 / estimate if estimate != 0 else float('inf')
                             for u, estimate in centrality_estimates.items()}
 
-    return inverse_centralities
+    return inverse_centralities, sampled_nodes
 
 
 def rename_vertices_by_average_distance(G, k):
@@ -64,7 +66,7 @@ def rename_vertices_by_average_distance(G, k):
     Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento.
     """
     # Step 1: Stima della distanza media (inversa della centralità)
-    avg_distances = estimate_inverse_centrality(G, k)
+    avg_distances, sampled_nodes = estimate_inverse_centrality(G, k)
 
     # Stampa i primi 10 risultati come esempio
     for node in list(avg_distances.keys())[:10]:
@@ -79,7 +81,70 @@ def rename_vertices_by_average_distance(G, k):
     for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
         renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
 
-    return renamed_vertices, sorted_vertices  # ritornare sorted_vertices per i calcolo di vk
+    return renamed_vertices, sorted_vertices, sampled_nodes  # ritornare sorted_vertices per i calcolo di vk e sampled nodes per il calcolo di delta
+
+
+def compute_delta_from_sample(G, sampled_nodes):
+    """
+    Calcola il valore di Δ (minimo della massima distanza tra i nodi campionati e gli altri nodi),
+    usando i nodi già campionati nello step 1.
+    """
+    max_distances = []
+
+    for u in sampled_nodes:
+        # Calcola le distanze da u a tutti gli altri nodi
+        distances = nx.single_source_dijkstra_path_length(G, u, weight='weight')
+
+        # Trova la distanza massima da u a tutti gli altri nodi
+        max_dist = max(distances.values())
+        max_distances.append(max_dist)
+
+    # Calcola il minimo delle distanze massime tra tutti i nodi campionati
+    min_max_distance = min(max_distances)
+
+    # Moltiplica per 2 per ottenere Δ
+    delta = 2 * min_max_distance
+
+    return delta
+
+
+def identify_candidates(G, sorted_vertices, delta, f_l):
+    """
+    Identifica i candidati (insieme E) sulla base della condizione:
+    𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
+    """
+    # Estrai la distanza media stimata per v_k (k-esimo vertice)
+    v_k = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
+    a_vk = v_k[1]  # La distanza media stimata per il vertice v_k
+
+    # Calcola la soglia
+    threshold = a_vk + 2 * f_l * delta
+    print(f"Soglia per i candidati: {threshold}")
+
+    # Insieme dei candidati
+    candidates = []
+
+    # Seleziona i vertici che soddisfano la condizione
+    for v, avg_distance in sorted_vertices:
+        if avg_distance <= threshold:
+            candidates.append(v)
+
+    return candidates
+
+
+def compute_exact_distances(G, candidates):
+    """
+    Calcola le distanze esatte per i candidati in E usando l'algoritmo Dijkstra.
+    Restituisce un dizionario con i nodi e le distanze calcolate.
+    """
+    exact_distances = {}
+
+    for v in candidates:
+        # Calcola le distanze da v a tutti gli altri nodi usando Dijkstra
+        distances = nx.single_source_dijkstra_path_length(G, v, weight='weight')
+        exact_distances[v] = distances
+
+    return exact_distances
 
 
 num_nodes = 100000
@@ -107,7 +172,7 @@ k = int(np.log2(num_nodes))  # Numero di iterazioni basato su log2(n)
 print("Valore K:", k)
 
 # Rinominazione dei vertici
-renamed_vertices, sorted_vertices = rename_vertices_by_average_distance(G, k)
+renamed_vertices, sorted_vertices, sampled_nodes = rename_vertices_by_average_distance(G, k)
 
 # Stampa i vertici rinominati con la loro distanza media
 for i, (vertex, info) in enumerate(renamed_vertices.items()):
@@ -118,5 +183,26 @@ for i, (vertex, info) in enumerate(renamed_vertices.items()):
 # sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
 vk = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
 print(f"Il vertice v_k è: {vk[0]}, con distanza stimata: {vk[1]}")
+
+# Calcolo di Δ
+delta = compute_delta_from_sample(G, sampled_nodes)
+print(f"Il valore di Δ è: {delta}")
+
+# Test della funzione Step 5
+f_l = 1  # Esempio di funzione f(ℓ). Puoi modificarla come preferisci.
+# Il parametro f(ℓ) dipende dalla configurazione dell'algoritmo e dalla scelta di ℓ
+candidates = identify_candidates(G, sorted_vertices, delta, f_l)
+print(f"Numero di candidati: {len(candidates)}")
+print(f"Primi candidati: {candidates[:10]}")
+
+# Test della funzione Step 6
+exact_distances = compute_exact_distances(G, candidates)
+print(f"Calcolate distanze esatte per {len(exact_distances)} candidati.")
+
+# Stampa le distanze per i primi 10 candidati
+for candidate in list(exact_distances.keys())[:10]:
+    print(f"Candidato {candidate}: Distanze esatte calcolate.")
+    # Mostra alcune delle distanze calcolate per ogni candidato
+    print(list(exact_distances[candidate].items())[:5])  # Mostra le prime 5 distanze per ciascun candidato
 
 
