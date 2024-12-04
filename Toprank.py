@@ -1,9 +1,12 @@
+from datetime import datetime
 import networkx as nx
 # import random
 # import matplotlib.pyplot as plt
 import numpy as np
-import Graph_generator as Gg
+# import Graph_generator as Gg
 import RAND as rand
+import pickle  # Per la serializzazione del grafo
+from collections import defaultdict
 
 
 def rename_vertices_by_average_distance(G, k):
@@ -15,12 +18,12 @@ def rename_vertices_by_average_distance(G, k):
     avg_distances, sampled_nodes = rand.randAlgorithm(G, k)
 
     # Stampa i primi 10 risultati come esempio
-    for node in list(avg_distances.keys())[:10]:
-        print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
+    # for node in list(avg_distances.keys())[:10]:
+        # print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
 
     # Step 2: Ordina i vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
-    print(sorted_vertices[:10])
+    # print(sorted_vertices[:10])
 
     # Step 3: Rinominazione dei vertici da v1 a vk
     renamed_vertices = {}
@@ -54,18 +57,19 @@ def compute_delta_from_sample(G, sampled_nodes):
     return delta
 
 
-def identify_candidates(G, sorted_vertices, delta, f_l):
+def identify_candidates(sorted_vertices, delta, f_l):
     """
     Identifica i candidati (insieme E) sulla base della condizione:
     𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
     """
     # Estrai la distanza media stimata per v_k (k-esimo vertice)
     v_k = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
+    # print(f"Il vertice v_k è: {vk[0]}, con distanza stimata: {vk[1]}")
     a_vk = v_k[1]  # La distanza media stimata per il vertice v_k
 
     # Calcola la soglia
     threshold = a_vk + 2 * f_l * delta
-    print(f"Soglia per i candidati: {threshold}")
+    # print(f"Soglia per i candidati: {threshold}")
 
     # Insieme dei candidati
     candidates = []
@@ -115,9 +119,53 @@ def select_top_k_vertices(exact_distances, k):
     return top_k_vertices
 
 
-num_nodes = 100000
+def Toprank(G, k):
+    # Rinominazione dei vertici. Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
+    renamed_vertices, sorted_vertices, sampled_nodes = rename_vertices_by_average_distance(G, k)
+
+    # Stampa i vertici rinominati con la loro distanza media
+    # for i, (vertex, info) in enumerate(renamed_vertices.items()):
+        # if i >= 10:  # Limita a 10 elementi
+            # break
+        # print(f"{vertex}: Nome originale: {info['vertex_name']}, Distanza media: {info['avg_distance']}")
+
+    # Calcolo di Δ
+    delta = compute_delta_from_sample(G, sampled_nodes)
+    # print(f"Il valore di Δ è: {delta}")
+
+    # Test della funzione Step 5
+    f_l = 1  # Esempio di funzione f(ℓ). Puoi modificarla come preferisci.
+    # Il parametro f(ℓ) dipende dalla configurazione dell'algoritmo e dalla scelta di ℓ
+    candidates = identify_candidates(sorted_vertices, delta, f_l)
+    print(f"Numero di candidati: {len(candidates)}")
+    # print(f"Primi candidati: {candidates[:10]}")
+
+    # Test della funzione Step 6
+    exact_distances = compute_exact_distances(G, candidates)
+    # print(f"Calcolate distanze esatte per {len(exact_distances)} candidati.")
+
+    # Stampa le distanze per i primi 10 candidati
+    # for candidate in list(exact_distances.keys())[:10]:
+        # print(f"Candidato {candidate}: Distanze esatte calcolate.")
+        # Mostra alcune delle distanze calcolate per ogni candidato
+        # print(list(exact_distances[candidate].items())[:5])  # Mostra le prime 5 distanze per ciascun candidato
+
+    # Test della funzione Step 7
+    top_k_vertices = select_top_k_vertices(exact_distances, k)
+
+    # Output dei risultati
+    # print(f"I top {k} vertici selezionati sono:")
+    # for i, (vertex, avg_distance) in enumerate(top_k_vertices, start=1):
+        # print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+
+    return top_k_vertices
+
+
+# num_nodes = 100000
 # G = create_connected_weighted_graph(num_nodes)
-G = Gg.create_connected_weighted_graph(num_nodes)
+# G = Gg.create_connected_weighted_graph(num_nodes)
+with open(f"graphs/graph_test1.pkl", "rb") as f:
+    G = pickle.load(f)
 
 num_nodi = G.number_of_nodes()
 print(f"Il grafo ha {num_nodi} nodi.")
@@ -137,9 +185,11 @@ nx.draw_networkx_edge_labels(G, pos, edge_labels=weights)
 plt.show()
 """
 
-k = int(np.log2(num_nodes))  # Numero di iterazioni basato su log2(n)
+# k = int(np.log2(num_nodi))  # Numero di iterazioni basato su log2(n)
+k = 100
 print("Valore K:", k)
 
+"""
 # Rinominazione dei vertici
 renamed_vertices, sorted_vertices, sampled_nodes = rename_vertices_by_average_distance(G, k)
 
@@ -176,9 +226,52 @@ for candidate in list(exact_distances.keys())[:10]:
 
 # Test della funzione Step 7
 top_k_vertices = select_top_k_vertices(exact_distances, k)
-print(f"I top {k} vertici selezionati sono:")
 
 # Output dei risultati
 print(f"I top {k} vertici selezionati sono:")
 for i, (vertex, avg_distance) in enumerate(top_k_vertices, start=1):
     print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+"""
+
+results = []
+print(datetime.now())
+for i in range(1, 5):
+    print("ESECUZIONE", i)
+    partial_result = Toprank(G, k)
+    for i, (vertex, avg_distance) in enumerate(partial_result[:15], start=1):
+        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+    results.append(partial_result)
+    print(datetime.now())
+
+# Per contare in quanti array appare ogni primo elemento della tupla
+presence_count = defaultdict(int)
+
+# Per raccogliere i secondi elementi di ogni primo elemento
+second_values = defaultdict(list)
+
+# Analisi degli array
+num_arrays = len(results)  # Numero totale di array
+for i, top_k_vertices in enumerate(results, start=1):
+    seen_in_current_array = set()
+    for vertex, avg_distance in top_k_vertices:
+        if vertex not in seen_in_current_array:
+            presence_count[vertex] += 1
+            seen_in_current_array.add(vertex)
+        second_values[vertex].append(avg_distance)
+
+# Calcolo delle medie delle distanze
+averages = {vertex: np.mean(distances) for vertex, distances in second_values.items()}
+
+# Filtrare gli elementi presenti in tutti gli array
+elements_in_all_arrays = {vertex: averages[vertex] for vertex, count in presence_count.items() if count == num_arrays}
+
+# Ordinare per la media delle distanze medie
+sorted_elements = sorted(elements_in_all_arrays.items(), key=lambda x: x[1])
+
+# Risultati
+print("Elementi presenti in tutti gli array, ordinati per la media delle distanze medie:")
+for vertex, avg in sorted_elements:
+    print(f"Vertex: {vertex}, Media delle distanze medie: {avg:.2f}")
+
+print(datetime.now())
+
