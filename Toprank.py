@@ -1,64 +1,9 @@
 import networkx as nx
-import random
+# import random
 # import matplotlib.pyplot as plt
 import numpy as np
-
-
-def create_connected_weighted_graph(num_nodes):
-    # Grafo vuoto
-    G = nx.Graph()
-    G.add_nodes_from(range(num_nodes))
-
-    # Creazione albero per assicurare che il grafo sia connesso
-    for i in range(num_nodes - 1):
-        weight = random.randint(1, 10)  # Peso casuale agli archi
-        G.add_edge(i, i + 1, weight=weight)
-
-    # Aggiunta ulteriori archi casuali per aumentare la densità del grafo
-    additional_edges = num_nodes  # numero di archi extra che vogliamo aggiungere
-    while additional_edges > 0:
-        u = random.randint(0, num_nodes - 1)
-        v = random.randint(0, num_nodes - 1)
-        if u != v and not G.has_edge(u, v):  # Evitiamo cicli e duplicati
-            weight = random.randint(1, 10)
-            G.add_edge(u, v, weight=weight)
-            additional_edges -= 1
-
-    return G
-
-
-def compute_sssp(G, source):
-    """
-    Calcola le distanze minime da un nodo sorgente a tutti gli altri nodi usando il Single Source Shortest Path (SSSP).
-    """
-    return nx.single_source_dijkstra_path_length(G, source, weight='weight')
-
-
-def estimate_inverse_centrality(G, k):
-    """
-    Algoritmo RAND per stimare l'inversa della centralità di tutti i nodi di un grafo.
-    """
-    n = G.number_of_nodes()
-    centrality_estimates = {node: 0 for node in G.nodes()}
-    sampled_nodes = []  # Lista dei nodi campionati
-
-    # Esegui k iterazioni per stimare l'inversa della centralità
-    for i in range(k):
-        # Seleziona un nodo casuale come sorgente
-        vi = random.choice(list(G.nodes()))
-        sampled_nodes.append(vi)  # Salva il nodo campionato
-        # Risolvi il problema del SSSP per il nodo vi
-        distances = compute_sssp(G, vi)
-
-        # Aggiorna la stima della centralità per ciascun nodo u
-        for u in G.nodes():
-            centrality_estimates[u] += (n / (n - 1)) * distances[u] / (k * (n - 1))
-
-    # L'inversa della centralità è la media delle distanze
-    inverse_centralities = {u: 1 / estimate if estimate != 0 else float('inf')
-                            for u, estimate in centrality_estimates.items()}
-
-    return inverse_centralities, sampled_nodes
+import Graph_generator as Gg
+import RAND as rand
 
 
 def rename_vertices_by_average_distance(G, k):
@@ -66,7 +11,8 @@ def rename_vertices_by_average_distance(G, k):
     Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento.
     """
     # Step 1: Stima della distanza media (inversa della centralità)
-    avg_distances, sampled_nodes = estimate_inverse_centrality(G, k)
+    # avg_distances, sampled_nodes = estimate_inverse_centrality(G, k)
+    avg_distances, sampled_nodes = rand.randAlgorithm(G, k)
 
     # Stampa i primi 10 risultati come esempio
     for node in list(avg_distances.keys())[:10]:
@@ -147,8 +93,31 @@ def compute_exact_distances(G, candidates):
     return exact_distances
 
 
+def select_top_k_vertices(exact_distances, k):
+    """
+    Seleziona i top k vertici in base alla distanza esatta dalla centralità di vicinanza.
+    Ordinando i candidati in base alla loro distanza media esatta.
+    """
+    # Crea una lista di tuple (vertice, distanza media)
+    vertices_with_distances = []
+
+    for v, distances in exact_distances.items():
+        # Calcola la distanza media per ogni vertice
+        avg_distance = np.mean(list(distances.values()))
+        vertices_with_distances.append((v, avg_distance))
+
+    # Ordina i vertici in ordine crescente rispetto alla loro distanza media
+    sorted_candidates = sorted(vertices_with_distances, key=lambda x: x[1])
+
+    # Seleziona i primi k vertici
+    top_k_vertices = sorted_candidates[:k]
+
+    return top_k_vertices
+
+
 num_nodes = 100000
-G = create_connected_weighted_graph(num_nodes)
+# G = create_connected_weighted_graph(num_nodes)
+G = Gg.create_connected_weighted_graph(num_nodes)
 
 num_nodi = G.number_of_nodes()
 print(f"Il grafo ha {num_nodi} nodi.")
@@ -156,7 +125,7 @@ num_arch = G.number_of_edges()
 print(f"Il grafo ha {num_arch} archi.")
 
 """
-# Visualizziamo il grafo e i pesi
+# Visualizzazione del grafo e dei pesi
 pos = nx.spring_layout(G)  # Posizione dei nodi per la visualizzazione
 weights = nx.get_edge_attributes(G, 'weight')  # Ottieni i pesi degli archi
 
@@ -205,4 +174,11 @@ for candidate in list(exact_distances.keys())[:10]:
     # Mostra alcune delle distanze calcolate per ogni candidato
     print(list(exact_distances[candidate].items())[:5])  # Mostra le prime 5 distanze per ciascun candidato
 
+# Test della funzione Step 7
+top_k_vertices = select_top_k_vertices(exact_distances, k)
+print(f"I top {k} vertici selezionati sono:")
 
+# Output dei risultati
+print(f"I top {k} vertici selezionati sono:")
+for i, (vertex, avg_distance) in enumerate(top_k_vertices, start=1):
+    print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
