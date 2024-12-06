@@ -10,75 +10,46 @@ from collections import defaultdict
 import math
 
 
-def rand_and_order_vertices_by_average_distance(G):
+def rand_and_order_vertices_by_average_distance(G, l):
     """
-    Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
+    Ordina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
     """
-    # Step 1: Stima della distanza media (inversa della centralità)
-    # l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
-    l = 40
-    print("L", l)
-    avg_distances, sampled_nodes = rand.randAlgorithm(G, l)
+    # Stima della distanza media (inversa della centralità)
+    avg_distances, sampled_nodes, max_distances = rand.randAlgorithm(G, l)
     print(str(len(avg_distances)))
 
-    # Stampa i primi 10 risultati come esempio
+    # Stampa dei primi 10 risultati come esempio
+    print("Valori non ordinati")
     for node in list(avg_distances.keys())[:10]:
         print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
 
-    # Step 2: Ordina i vertici in base alla distanza media (crescente)
+    # Ordinamento dei vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
     # print("Sorted vertices")
     # print(sorted_vertices[:10])
 
-    # Step 3: Rinominazione dei vertici da v1 a vk
-    # renamed_vertices = {}
-    # for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
-        # renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
-
-    # return renamed_vertices, sorted_vertices, sampled_nodes  # ritornare sorted_vertices per i calcolo di vk e sampled nodes per il calcolo di delta
-    return sorted_vertices, sampled_nodes
+    return sorted_vertices, sampled_nodes, max_distances
 
 
-def compute_delta_from_sample(G, sampled_nodes):
-    """
-    Calcola il valore di Δ (minimo della massima distanza tra i nodi campionati e gli altri nodi),
-    usando i nodi già campionati nello step 1.
-    """
-    max_distances = []
-
-    for u in sampled_nodes:
-        # Calcola le distanze da u a tutti gli altri nodi
-        distances = nx.single_source_dijkstra_path_length(G, u, weight='weight')
-
-        # Trova la distanza massima da u a tutti gli altri nodi
-        max_dist = max(distances.values())
-        max_distances.append(max_dist)
-
-    # Calcola il minimo delle distanze massime tra tutti i nodi campionati
-    min_max_distance = min(max_distances)
-
-    # Moltiplica per 2 per ottenere Δ
-    delta = 2 * min_max_distance
-
-    return delta
-
-
-def identify_candidates(sorted_vertices, delta, f_l):
+def identify_candidates(sorted_vertices, delta, l):
     """
     Identifica i candidati (insieme E) sulla base della condizione:
     𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
     """
+    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.5
+    print("f(ℓ) = ", f_l)
     # Estrai la distanza media stimata per v_k (k-esimo vertice)
     v_k = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
-    # print(f"Il vertice v_k è: {vk[0]}, con distanza stimata: {vk[1]}")
+    print(f"Il vertice v_k è: {v_k[0]}, con distanza stimata: {v_k[1]}")
     a_vk = v_k[1]  # La distanza media stimata per il vertice v_k
 
     # Calcola la soglia
     threshold = a_vk + 2 * f_l * delta
-    # print(f"Soglia per i candidati: {threshold}")
+    print(f"Soglia per i candidati: {threshold}")
 
     # Insieme dei candidati
     candidates = []
+    print("I vertici pre-selezione sono:", len(sorted_vertices))
 
     # Seleziona i vertici che soddisfano la condizione
     for v, avg_distance in sorted_vertices:
@@ -127,21 +98,29 @@ def select_top_k_vertices(exact_distances, k):
 
 def Toprank(G, k):
     # Ordinamento dei vertici sulla base delle distanze medie stimate.
+    # l = numero di campioni estratti casualmente dal grafo
+    l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
+    # l = 40
+    print("L", l)
     # Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
-    sorted_vertices, sampled_nodes = rand_and_order_vertices_by_average_distance(G)
+    sorted_vertices, sampled_nodes, max_distances = rand_and_order_vertices_by_average_distance(G, l)
 
-    # Stampa i primi 10 vertici ordinati in base alla loro distanza media stimata
+    # Stampa dei primi 10 vertici ordinati in base alla loro distanza media stimata
+    print("Primi k vertici ordinati")
     for index, (vertex, avg_distance) in enumerate(sorted_vertices[:10], start=1):
         print(f"v{index}: Node {vertex}, Estimated Average Distance: {avg_distance}")
 
     # Calcolo di Δ
-    delta = compute_delta_from_sample(G, sampled_nodes)
-    # print(f"Il valore di Δ è: {delta}")
+    print("Distanze max")
+    print(str(max_distances))
+    delta_values = [2 * max_distance for max_distance in max_distances.values()]
+    print("Distanze max doppie")
+    print(str(delta_values))
+    delta = min(delta_values)
+    print(f"Il valore di Δ è: {delta}")
 
-    # Test della funzione Step 5
-    f_l = 1  # Esempio di funzione f(ℓ). Puoi modificarla come preferisci.
-    # Il parametro f(ℓ) dipende dalla configurazione dell'algoritmo e dalla scelta di ℓ
-    candidates = identify_candidates(sorted_vertices, delta, f_l)
+    # Computazione del set di vertici candidati
+    candidates = identify_candidates(sorted_vertices, delta, l)
     print(f"Numero di candidati: {len(candidates)}")
     # print(f"Primi candidati: {candidates[:10]}")
 

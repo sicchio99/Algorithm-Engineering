@@ -11,6 +11,8 @@ def randAlgorithm(G, l):
     n = G.number_of_nodes()
     # Inizializza un accumulatore per le somme delle distanze
     inverse_centrality_estimates = {u: 0 for u in G.nodes()}
+    # Inizializza un dizionario per le distanze massime per ogni nodo campionato
+    max_distances = {}
 
     # Esegui k iterazioni per stimare l'inversa della centralità
     for i in range(l):
@@ -28,16 +30,11 @@ def randAlgorithm(G, l):
             inverse_centrality_estimates[u] += contribution  # La distanza media è semplicemente il valore accumulato
             # print(f"    Aggiorno nodo {u}: somma += {contribution:.4f} -> somma attuale = {distance_sums[u]:.4f}")
 
-    # Calcola la centralità per ogni nodo
-    # print("\nCalcolo della centralità:")
-    # for u in G.nodes():
-        # if distance_sums[u] > 0:
-            # centrality_estimates[u] = 1/distance_sums[u]
-         # else:
-            # centrality_estimates[u] = float('inf')  # Caso speciale
-        # print(f"  Nodo {u}: centralità = {centrality_estimates[u]:.4f}")
+        # Calcola la distanza massima per il nodo campionato vi
+        max_distances[vi] = max(distances.values())  # Distanza massima da vi a tutti gli altri nodi
+        # print(f"{vi} - Distanza max: {max_distances[vi]}")
 
-    return inverse_centrality_estimates, sampled_nodes
+    return inverse_centrality_estimates, sampled_nodes, max_distances
 
 
 
@@ -46,3 +43,13 @@ def compute_sssp(G, source):
     Calcola le distanze minime da un nodo sorgente a tutti gli altri nodi usando il Single Source Shortest Path (SSSP).
     """
     return nx.single_source_dijkstra_path_length(G, source, weight='weight')
+
+# Era nella funzione rand
+# Calcola la centralità per ogni nodo
+    # print("\nCalcolo della centralità:")
+    # for u in G.nodes():
+        # if distance_sums[u] > 0:
+            # centrality_estimates[u] = 1/distance_sums[u]
+         # else:
+            # centrality_estimates[u] = float('inf')  # Caso speciale
+        # print(f"  Nodo {u}: centralità = {centrality_estimates[u]:.4f}")
