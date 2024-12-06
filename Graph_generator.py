@@ -39,7 +39,7 @@ def save_graph(graph, file_name, folder="graphs"):
 
 
 if __name__ == '__main__':
-    for i in range(1, 2):
+    for i in range(1, 11):
         nodes = random.randint(80000, 120000)
         G = create_connected_weighted_graph(nodes)
         save_graph(G, f"graph_test{i}.pkl")

@@ -145,7 +145,7 @@ def Toprank(G, k):
     return top_k_vertices
 
 
-with open(f"graphs/graph_test1.pkl", "rb") as f:
+with open(f"graphs/graph_test10.pkl", "rb") as f:
     G = pickle.load(f)
 
 num_nodi = G.number_of_nodes()
