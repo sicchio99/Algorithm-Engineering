@@ -1,9 +1,7 @@
 from datetime import datetime
 import networkx as nx
-# import random
 # import matplotlib.pyplot as plt
 import numpy as np
-# import Graph_generator as Gg
 import RAND as rand
 import pickle  # Per la serializzazione del grafo
 from collections import defaultdict
@@ -36,7 +34,7 @@ def identify_candidates(sorted_vertices, delta, l):
     Identifica i candidati (insieme E) sulla base della condizione:
     𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
     """
-    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.5
+    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
     print("f(ℓ) = ", f_l)
     # Estrai la distanza media stimata per v_k (k-esimo vertice)
     v_k = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
@@ -44,7 +42,7 @@ def identify_candidates(sorted_vertices, delta, l):
     a_vk = v_k[1]  # La distanza media stimata per il vertice v_k
 
     # Calcola la soglia
-    threshold = a_vk + 2 * f_l * delta
+    threshold = a_vk + 1 * f_l * delta # coeff originale = 2
     print(f"Soglia per i candidati: {threshold}")
 
     # Insieme dei candidati
@@ -65,11 +63,14 @@ def compute_exact_distances(G, candidates):
     Restituisce un dizionario con i nodi e le distanze calcolate.
     """
     exact_distances = {}
+    c = 1
 
     for v in candidates:
+        print(f"Esecuzione candidato {c}/{len(candidates)}")
         # Calcola le distanze da v a tutti gli altri nodi usando Dijkstra
         distances = nx.single_source_dijkstra_path_length(G, v, weight='weight')
         exact_distances[v] = distances
+        c+=1
 
     return exact_distances
 
@@ -113,10 +114,7 @@ def Toprank(G, k):
     # Calcolo di Δ
     print("Distanze max")
     print(str(max_distances))
-    delta_values = [2 * max_distance for max_distance in max_distances.values()]
-    print("Distanze max doppie")
-    print(str(delta_values))
-    delta = min(delta_values)
+    delta = 1 * min(max_distance for max_distance in max_distances.values())  # coeff originale = 2
     print(f"Il valore di Δ è: {delta}")
 
     # Computazione del set di vertici candidati
@@ -126,13 +124,6 @@ def Toprank(G, k):
 
     # Test della funzione Step 6
     exact_distances = compute_exact_distances(G, candidates)
-    # print(f"Calcolate distanze esatte per {len(exact_distances)} candidati.")
-
-    # Stampa le distanze per i primi 10 candidati
-    # for candidate in list(exact_distances.keys())[:10]:
-        # print(f"Candidato {candidate}: Distanze esatte calcolate.")
-        # Mostra alcune delle distanze calcolate per ogni candidato
-        # print(list(exact_distances[candidate].items())[:5])  # Mostra le prime 5 distanze per ciascun candidato
 
     # Test della funzione Step 7
     top_k_vertices = select_top_k_vertices(exact_distances, k)
@@ -145,7 +136,7 @@ def Toprank(G, k):
     return top_k_vertices
 
 
-with open(f"graphs/graph_test10.pkl", "rb") as f:
+with open(f"graphs/graph_test1.pkl", "rb") as f:
     G = pickle.load(f)
 
 num_nodi = G.number_of_nodes()
@@ -170,56 +161,16 @@ plt.show()
 k = 10
 print("Valore K:", k)
 
-"""
-# Rinominazione dei vertici
-renamed_vertices, sorted_vertices, sampled_nodes = rename_vertices_by_average_distance(G, k)
-
-# Stampa i vertici rinominati con la loro distanza media
-for i, (vertex, info) in enumerate(renamed_vertices.items()):
-    if i >= 10:  # Limita a 10 elementi
-        break
-    print(f"{vertex}: Nome originale: {info['vertex_name']}, Distanza media: {info['avg_distance']}")
-
-# sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
-vk = sorted_vertices[k - 1]  # k-1 perché l'indice inizia da 0
-print(f"Il vertice v_k è: {vk[0]}, con distanza stimata: {vk[1]}")
-
-# Calcolo di Δ
-delta = compute_delta_from_sample(G, sampled_nodes)
-print(f"Il valore di Δ è: {delta}")
-
-# Test della funzione Step 5
-f_l = 1  # Esempio di funzione f(ℓ). Puoi modificarla come preferisci.
-# Il parametro f(ℓ) dipende dalla configurazione dell'algoritmo e dalla scelta di ℓ
-candidates = identify_candidates(G, sorted_vertices, delta, f_l)
-print(f"Numero di candidati: {len(candidates)}")
-print(f"Primi candidati: {candidates[:10]}")
-
-# Test della funzione Step 6
-exact_distances = compute_exact_distances(G, candidates)
-print(f"Calcolate distanze esatte per {len(exact_distances)} candidati.")
-
-# Stampa le distanze per i primi 10 candidati
-for candidate in list(exact_distances.keys())[:10]:
-    print(f"Candidato {candidate}: Distanze esatte calcolate.")
-    # Mostra alcune delle distanze calcolate per ogni candidato
-    print(list(exact_distances[candidate].items())[:5])  # Mostra le prime 5 distanze per ciascun candidato
-
-# Test della funzione Step 7
-top_k_vertices = select_top_k_vertices(exact_distances, k)
-
-# Output dei risultati
-print(f"I top {k} vertici selezionati sono:")
-for i, (vertex, avg_distance) in enumerate(top_k_vertices, start=1):
+partial_result = Toprank(G, k)
+for i, (vertex, avg_distance) in enumerate(partial_result, start=1):
     print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
 """
-
 results = []
 print(datetime.now())
 for i in range(1, 2):
     print("ESECUZIONE", i)
     partial_result = Toprank(G, k)
-    for i, (vertex, avg_distance) in enumerate(partial_result[:15], start=1):
+    for i, (vertex, avg_distance) in enumerate(partial_result, start=1):
         print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
     results.append(partial_result)
     print(datetime.now())
@@ -255,4 +206,5 @@ for vertex, avg in sorted_elements:
     print(f"Vertex: {vertex}, Media delle distanze medie: {avg:.2f}")
 
 print(datetime.now())
+"""
 
