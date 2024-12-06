@@ -2,31 +2,43 @@ import networkx as nx
 import random
 
 
-def randAlgorithm(G, k):
+def randAlgorithm(G, l):
     """
-    Algoritmo RAND per stimare l'inversa della centralità di tutti i nodi di un grafo.
+    Algoritmo RAND per stimare l'inversa della centralità di l nodi di un grafo.
     """
-    centrality_estimates = {node: 0 for node in G.nodes()}
+    # centrality_estimates = {}
     sampled_nodes = []  # Lista dei nodi campionati
     n = G.number_of_nodes()
+    # Inizializza un accumulatore per le somme delle distanze
+    inverse_centrality_estimates = {u: 0 for u in G.nodes()}
 
     # Esegui k iterazioni per stimare l'inversa della centralità
-    for i in range(k):
+    for i in range(l):
+        print(f"\nIterazione {i + 1}/{l}:")
         # Seleziona un nodo casuale come sorgente
         vi = random.choice(list(G.nodes()))
         sampled_nodes.append(vi)  # Salva il nodo campionato
+
         # Risolvi il problema del SSSP per il nodo vi
         distances = compute_sssp(G, vi)
 
-        # Aggiorna la stima della centralità per ciascun nodo u
+        # Aggiorna l'accumulatore delle somme delle distanze
         for u in G.nodes():
-            centrality_estimates[u] += (n / (n - 1)) * distances[u] / (k * (n - 1))
+            contribution = n * distances[u] / (l * (n - 1))
+            inverse_centrality_estimates[u] += contribution  # La distanza media è semplicemente il valore accumulato
+            # print(f"    Aggiorno nodo {u}: somma += {contribution:.4f} -> somma attuale = {distance_sums[u]:.4f}")
 
-    # L'inversa della centralità è la media delle distanze
-    inverse_centralities = {u: 1 / estimate if estimate != 0 else float('inf')
-                            for u, estimate in centrality_estimates.items()}
+    # Calcola la centralità per ogni nodo
+    # print("\nCalcolo della centralità:")
+    # for u in G.nodes():
+        # if distance_sums[u] > 0:
+            # centrality_estimates[u] = 1/distance_sums[u]
+         # else:
+            # centrality_estimates[u] = float('inf')  # Caso speciale
+        # print(f"  Nodo {u}: centralità = {centrality_estimates[u]:.4f}")
 
-    return inverse_centralities, sampled_nodes
+    return inverse_centrality_estimates, sampled_nodes
+
 
 
 def compute_sssp(G, source):

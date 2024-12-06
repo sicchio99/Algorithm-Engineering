@@ -7,30 +7,36 @@ import numpy as np
 import RAND as rand
 import pickle  # Per la serializzazione del grafo
 from collections import defaultdict
+import math
 
 
-def rename_vertices_by_average_distance(G, k):
+def rand_and_order_vertices_by_average_distance(G):
     """
-    Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento.
+    Rinomina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
     """
     # Step 1: Stima della distanza media (inversa della centralità)
-    # avg_distances, sampled_nodes = estimate_inverse_centrality(G, k)
-    avg_distances, sampled_nodes = rand.randAlgorithm(G, k)
+    # l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
+    l = 40
+    print("L", l)
+    avg_distances, sampled_nodes = rand.randAlgorithm(G, l)
+    print(str(len(avg_distances)))
 
     # Stampa i primi 10 risultati come esempio
-    # for node in list(avg_distances.keys())[:10]:
-        # print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
+    for node in list(avg_distances.keys())[:10]:
+        print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
 
     # Step 2: Ordina i vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
+    # print("Sorted vertices")
     # print(sorted_vertices[:10])
 
     # Step 3: Rinominazione dei vertici da v1 a vk
-    renamed_vertices = {}
-    for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
-        renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
+    # renamed_vertices = {}
+    # for i, (vertex, avg_distance) in enumerate(sorted_vertices, start=1):
+        # renamed_vertices[f"v{i}"] = {'vertex_name': vertex, 'avg_distance': avg_distance}
 
-    return renamed_vertices, sorted_vertices, sampled_nodes  # ritornare sorted_vertices per i calcolo di vk e sampled nodes per il calcolo di delta
+    # return renamed_vertices, sorted_vertices, sampled_nodes  # ritornare sorted_vertices per i calcolo di vk e sampled nodes per il calcolo di delta
+    return sorted_vertices, sampled_nodes
 
 
 def compute_delta_from_sample(G, sampled_nodes):
@@ -120,14 +126,13 @@ def select_top_k_vertices(exact_distances, k):
 
 
 def Toprank(G, k):
-    # Rinominazione dei vertici. Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
-    renamed_vertices, sorted_vertices, sampled_nodes = rename_vertices_by_average_distance(G, k)
+    # Ordinamento dei vertici sulla base delle distanze medie stimate.
+    # Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
+    sorted_vertices, sampled_nodes = rand_and_order_vertices_by_average_distance(G)
 
-    # Stampa i vertici rinominati con la loro distanza media
-    # for i, (vertex, info) in enumerate(renamed_vertices.items()):
-        # if i >= 10:  # Limita a 10 elementi
-            # break
-        # print(f"{vertex}: Nome originale: {info['vertex_name']}, Distanza media: {info['avg_distance']}")
+    # Stampa i primi 10 vertici ordinati in base alla loro distanza media stimata
+    for index, (vertex, avg_distance) in enumerate(sorted_vertices[:10], start=1):
+        print(f"v{index}: Node {vertex}, Estimated Average Distance: {avg_distance}")
 
     # Calcolo di Δ
     delta = compute_delta_from_sample(G, sampled_nodes)
@@ -161,9 +166,6 @@ def Toprank(G, k):
     return top_k_vertices
 
 
-# num_nodes = 100000
-# G = create_connected_weighted_graph(num_nodes)
-# G = Gg.create_connected_weighted_graph(num_nodes)
 with open(f"graphs/graph_test1.pkl", "rb") as f:
     G = pickle.load(f)
 
@@ -186,7 +188,7 @@ plt.show()
 """
 
 # k = int(np.log2(num_nodi))  # Numero di iterazioni basato su log2(n)
-k = 100
+k = 10
 print("Valore K:", k)
 
 """
@@ -235,7 +237,7 @@ for i, (vertex, avg_distance) in enumerate(top_k_vertices, start=1):
 
 results = []
 print(datetime.now())
-for i in range(1, 5):
+for i in range(1, 2):
     print("ESECUZIONE", i)
     partial_result = Toprank(G, k)
     for i, (vertex, avg_distance) in enumerate(partial_result[:15], start=1):
