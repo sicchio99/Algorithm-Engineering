@@ -6,6 +6,62 @@ import pickle  # Per la serializzazione del grafo
 import math
 
 
+def Toprank2(G, k):
+    """
+        Algoritmo euristico di ranking basato sulla closeness centrality dei vertici di un grafo
+        :param G: Grafo da analizzare
+        :param k: numero dei top k vertici da ottenere
+        :return: top k vertici ordinati in base allla closeness centrality
+        """
+    # Step 1: Ordinamento dei vertici sulla base delle distanze medie stimate.
+    # l = numero di campioni estratti casualmente dal grafo
+    l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
+    print("L", l)
+
+    # Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
+    sorted_vertices, max_distances = rand_and_order_vertices_by_average_distance(G, l)
+    print("Fine esecuzione RAND")
+
+    # Step 2: Calcolo di Δ
+    delta = 1 * min(max_distance for max_distance in max_distances.values())  # coeff originale = 2
+    print(f"Il valore di Δ è: {delta}")
+
+    # Step 3: Computazione del set di vertici candidati
+    candidates = identify_candidates(sorted_vertices, delta, l)
+    print(f"Numero di candidati: {len(candidates)}")
+
+    # PARTE NUOVA
+    p = len(candidates)
+    p_1 = 0
+    q = math.log(G.number_of_nodes())
+    while (p - p_1) <= q:
+        p = len(candidates)
+        avg_distances, max_distances = rand.randAlgorithm(G, p)
+        # AGGIUNGERE: aggiornare distanze medie stimate precedenti
+        l = l + q
+        delta = min(delta, 1 * min(max_distance for max_distance in max_distances.values()))
+        # Ordinamento dei vertici in base alla distanza media (crescente)
+        sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
+
+        candidates = identify_candidates(sorted_vertices, delta, l)
+        print(f"Numero di candidati: {len(candidates)}")
+
+        p_1 = len(candidates)
+        print(f"(p - p') = ({p} - {p_1}) = {(p-p_1)}")
+
+    print("Fine ciclo")
+
+    # Step X: Calcolo delle distanze esatte per il set di vertici candidati
+    print("Calcolo delle distanze esatte per il set di vertici candidati")
+    exact_distances = compute_exact_distances(G, candidates)
+
+    # Step Y: Selezione dei Top-k vertici
+    top_k_vertices = select_top_k_vertices(exact_distances, k)
+
+    return result
+
+
+
 def rand_and_order_vertices_by_average_distance(G, l):
     """
     Ordina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
@@ -86,41 +142,7 @@ def select_top_k_vertices(exact_distances, k):
     return top_k_vertices
 
 
-def Toprank(G, k):
-    """
-    Algoritmo di ranking basato sulla closeness centrality dei vertici di un grafo
-    :param G: Grafo da analizzare
-    :param k: numero dei top k vertici da ottenere
-    :return: top k vertici ordinati in base allla closeness centrality
-    """
-    # Step 1: Ordinamento dei vertici sulla base delle distanze medie stimate.
-    # l = numero di campioni estratti casualmente dal grafo
-    l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
-    print("L", l)
-
-    # Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
-    sorted_vertices, max_distances = rand_and_order_vertices_by_average_distance(G, l)
-    print("Fine esecuzione RAND")
-
-    # Step 2: Calcolo di Δ
-    delta = 1 * min(max_distance for max_distance in max_distances.values())  # coeff originale = 2
-    print(f"Il valore di Δ è: {delta}")
-
-    # Step 3: Computazione del set di vertici candidati
-    candidates = identify_candidates(sorted_vertices, delta, l)
-    print(f"Numero di candidati: {len(candidates)}")
-
-    # Step 4: Calcolo delle distanze esatte per il set di vertici candidati
-    print("Calcolo delle distanze esatte per il set di vertici candidati")
-    exact_distances = compute_exact_distances(G, candidates)
-
-    # Step 5: Selezione dei Top-k vertici
-    top_k_vertices = select_top_k_vertices(exact_distances, k)
-
-    return top_k_vertices
-
-
-if __name__ == "__main__":
+if '__main__' == __name__:
     with open(f"graphs/graph_test1.pkl", "rb") as f:
         G = pickle.load(f)
 
@@ -136,19 +158,8 @@ if __name__ == "__main__":
     k = 10
     print("Valore K:", k)
 
-    print("ESECUZIONE 1")
     print(datetime.now())
-    result = Toprank(G, k)
+    result = Toprank2(G, k)
     print(datetime.now())
     for i, (vertex, avg_distance) in enumerate(result, start=1):
-        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
-
-    print("ESECUZIONE 2")
-    result2 = Toprank(G, k)
-    for i, (vertex, avg_distance) in enumerate(result2, start=1):
-        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
-
-    print("ESECUZIONE 3")
-    result3 = Toprank(G, k)
-    for i, (vertex, avg_distance) in enumerate(result3, start=1):
         print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
