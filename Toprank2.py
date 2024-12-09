@@ -33,7 +33,7 @@ def Toprank2(G, k):
     # PARTE NUOVA
     p = len(candidates)
     p_1 = 0
-    q = math.log(G.number_of_nodes())
+    q = int(math.log(G.number_of_nodes()))
     while (p - p_1) <= q:
         p = len(candidates)
         avg_distances, max_distances = rand.randAlgorithm(G, p)
