@@ -19,7 +19,7 @@ def Toprank2(G, k):
     print("L", l)
 
     # Sorted_vertices è una lista ordinata di tuple (vertex_name, avg_distance)
-    sorted_vertices, max_distances = rand_and_order_vertices_by_average_distance(G, l)
+    sorted_vertices, max_distances, avg_distances = rand_and_order_vertices_by_average_distance(G, l)
     print("Fine esecuzione RAND")
 
     # Step 2: Calcolo di Δ
@@ -34,20 +34,27 @@ def Toprank2(G, k):
     p = len(candidates)
     p_1 = 0
     q = int(math.log(G.number_of_nodes()))
-    while (p - p_1) <= q:
+    i = 2
+    print(f"Partenza: (p - p') = ({p} - {p_1}) = {(p - p_1)}")
+    while (p - p_1) > q:  # prima <=
         p = len(candidates)
-        avg_distances, max_distances = rand.randAlgorithm(G, p)
-        # AGGIUNGERE: aggiornare distanze medie stimate precedenti
+        print(f"Numero di candidati: {len(candidates)}")
+        print(f"Numero vecchi campioni: {l} - Numero campioni aggiuntivi: {q}")
+        print(f"Inizio Rand {i}")
+        avg_distances, max_distances = rand.update_centrality_estimates(G, q, avg_distances, max_distances, l)
         l = l + q
+        print(f"Nuovo l: {l}")
         delta = min(delta, 1 * min(max_distance for max_distance in max_distances.values()))
+        print(f"Nuovo delta: {delta}")
         # Ordinamento dei vertici in base alla distanza media (crescente)
         sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
 
         candidates = identify_candidates(sorted_vertices, delta, l)
-        print(f"Numero di candidati: {len(candidates)}")
+        print(f"Nuovo numero di candidati: {len(candidates)}")
 
         p_1 = len(candidates)
-        print(f"(p - p') = ({p} - {p_1}) = {(p-p_1)}")
+        print(f"(p - p') = ({p} - {p_1}) = {(p - p_1)}")
+        i = i+1
 
     print("Fine ciclo")
 
@@ -58,8 +65,7 @@ def Toprank2(G, k):
     # Step Y: Selezione dei Top-k vertici
     top_k_vertices = select_top_k_vertices(exact_distances, k)
 
-    return result
-
+    return top_k_vertices
 
 
 def rand_and_order_vertices_by_average_distance(G, l):
@@ -69,16 +75,16 @@ def rand_and_order_vertices_by_average_distance(G, l):
     avg_distances, max_distances = rand.randAlgorithm(G, l)
 
     # Stampa dei primi 10 risultati come esempio
-    #print("Valori non ordinati")
-    #for node in list(avg_distances.keys())[:10]:
-        #print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
+    # print("Valori non ordinati")
+    # for node in list(avg_distances.keys())[:10]:
+    # print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
 
     # Ordinamento dei vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
     # print("Sorted vertices")
     # print(sorted_vertices[:10])
 
-    return sorted_vertices, max_distances
+    return sorted_vertices, max_distances, avg_distances
 
 
 def identify_candidates(sorted_vertices, delta, l):
@@ -87,14 +93,14 @@ def identify_candidates(sorted_vertices, delta, l):
     𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
     """
     f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
-    #print("f(ℓ) = ", f_l)
+    # print("f(ℓ) = ", f_l)
 
     # Estrazione della distanza media stimata per v_k (k-esimo vertice)
     a_vk = sorted_vertices[k - 1][1]
 
     # Calcolo della soglia
     threshold = a_vk + 1 * f_l * delta  # coeff originale = 2
-    #print(f"Soglia per i candidati: {threshold}")
+    # print(f"Soglia per i candidati: {threshold}")
 
     # Insieme dei candidati
     candidates = []
@@ -158,8 +164,12 @@ if '__main__' == __name__:
     k = 10
     print("Valore K:", k)
 
-    print(datetime.now())
+    start = datetime.now()
+    print(f"Start: {start}")
     result = Toprank2(G, k)
-    print(datetime.now())
+    end = datetime.now()
+    print(f"Start: {end}")
     for i, (vertex, avg_distance) in enumerate(result, start=1):
         print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+    duration = end - start
+    print(f"Durata Totale: {duration.total_seconds()}")
