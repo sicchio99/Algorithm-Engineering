@@ -1,16 +1,15 @@
 from datetime import datetime
-import networkx as nx
-import numpy as np
-import RAND as rand
+from utility.RAND import randAlgorithm
 import pickle  # Per la serializzazione del grafo
 import math
+from utility.utils import identify_candidates, compute_exact_distances, select_top_k_vertices
 
 
 def rand_and_order_vertices_by_average_distance(G, l):
     """
     Ordina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
     """
-    avg_distances, max_distances = rand.randAlgorithm(G, l)
+    avg_distances, max_distances = randAlgorithm(G, l)
 
     # Stampa dei primi 10 risultati come esempio
     #print("Valori non ordinati")
@@ -23,67 +22,6 @@ def rand_and_order_vertices_by_average_distance(G, l):
     # print(sorted_vertices[:10])
 
     return sorted_vertices, max_distances
-
-
-def identify_candidates(sorted_vertices, delta, l):
-    """
-    Identifica i candidati (insieme E) sulla base della condizione:
-    𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
-    """
-    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
-    #print("f(ℓ) = ", f_l)
-
-    # Estrazione della distanza media stimata per v_k (k-esimo vertice)
-    a_vk = sorted_vertices[k - 1][1]
-
-    # Calcolo della soglia
-    threshold = a_vk + 1 * f_l * delta  # coeff originale = 2
-    #print(f"Soglia per i candidati: {threshold}")
-
-    # Insieme dei candidati
-    candidates = []
-    # Selezione dei vertici che soddisfano la condizione
-    for v, avg_distance in sorted_vertices:
-        if avg_distance <= threshold:
-            candidates.append(v)
-
-    return candidates
-
-
-def compute_exact_distances(G, candidates):
-    """
-    Calcola le distanze esatte per i candidati in E usando l'algoritmo Dijkstra.
-    Restituisce un dizionario con i nodi e le distanze calcolate.
-    """
-    exact_distances = {}
-
-    for v in candidates:
-        distances = nx.single_source_dijkstra_path_length(G, v, weight='weight')
-        exact_distances[v] = distances
-
-    return exact_distances
-
-
-def select_top_k_vertices(exact_distances, k):
-    """
-    Seleziona i top k vertici in base alla distanza esatta dalla centralità di vicinanza.
-    Ordinamento dei candidati in base alla loro distanza media esatta.
-    """
-    # Creazione lista di tuple (vertice, distanza media)
-    vertices_with_distances = []
-
-    for v, distances in exact_distances.items():
-        # Calcolo della distanza media per ogni vertice
-        avg_distance = np.mean(list(distances.values()))
-        vertices_with_distances.append((v, avg_distance))
-
-    # Ordinamento dei vertici in ordine crescente rispetto alla loro distanza media
-    sorted_candidates = sorted(vertices_with_distances, key=lambda x: x[1])
-
-    # Selezione dei primi k vertici
-    top_k_vertices = sorted_candidates[:k]
-
-    return top_k_vertices
 
 
 def Toprank(G, k):
@@ -107,7 +45,7 @@ def Toprank(G, k):
     print(f"Il valore di Δ è: {delta}")
 
     # Step 3: Computazione del set di vertici candidati
-    candidates = identify_candidates(sorted_vertices, delta, l)
+    candidates = identify_candidates(G, sorted_vertices, delta, l, k)
     print(f"Numero di candidati: {len(candidates)}")
 
     # Step 4: Calcolo delle distanze esatte per il set di vertici candidati
@@ -136,19 +74,12 @@ if __name__ == "__main__":
     k = 10
     print("Valore K:", k)
 
-    print("ESECUZIONE 1")
-    print(datetime.now())
-    result = Toprank(G, k)
-    print(datetime.now())
-    for i, (vertex, avg_distance) in enumerate(result, start=1):
-        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
-
-    print("ESECUZIONE 2")
-    result2 = Toprank(G, k)
-    for i, (vertex, avg_distance) in enumerate(result2, start=1):
-        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
-
-    print("ESECUZIONE 3")
-    result3 = Toprank(G, k)
-    for i, (vertex, avg_distance) in enumerate(result3, start=1):
-        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+    for j in range(1, 4):
+        print(f"ESECUZIONE {j}")
+        start = datetime.now()
+        result = Toprank(G, k)
+        end = datetime.now()
+        for i, (vertex, avg_distance) in enumerate(result, start=1):
+            print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+        duration = end - start
+        print(f"Durata Totale {j}: {duration.total_seconds()}")

@@ -1,21 +1,14 @@
-import pickle
-import RAND as rand
-from datetime import datetime
-import networkx as nx
 # import random
 # import matplotlib.pyplot as plt
-import numpy as np
 # import Graph_generator as Gg
-import RAND as rand
 import pickle  # Per la serializzazione del grafo
-from collections import defaultdict
 import math
 
 
 def rand_and_order_vertices_by_average_distance(G):
     # Step 1: Stima della distanza media (inversa della centralità)
     l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
-    avg_distances, sampled_nodes = rand.randAlgorithm(G, l)
+    avg_distances, sampled_nodes = RAND.randAlgorithm(G, l)
 
     # Step 2: Ordina i vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])

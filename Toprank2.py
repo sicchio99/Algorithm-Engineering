@@ -1,9 +1,8 @@
 from datetime import datetime
-import networkx as nx
-import numpy as np
-import RAND as rand
+from utility.RAND import randAlgorithm, update_centrality_estimates
 import pickle  # Per la serializzazione del grafo
 import math
+from utility.utils import identify_candidates, compute_exact_distances, select_top_k_vertices
 
 
 def Toprank2(G, k):
@@ -14,7 +13,6 @@ def Toprank2(G, k):
         :return: top k vertici ordinati in base allla closeness centrality
         """
     # Step 1: Ordinamento dei vertici sulla base delle distanze medie stimate.
-    # l = numero di campioni estratti casualmente dal grafo
     l = int((G.number_of_nodes() ** (2 / 3)) / (math.log(G.number_of_nodes()) ** (1 / 3)))
     print("L", l)
 
@@ -27,42 +25,45 @@ def Toprank2(G, k):
     print(f"Il valore di Δ è: {delta}")
 
     # Step 3: Computazione del set di vertici candidati
-    candidates = identify_candidates(sorted_vertices, delta, l)
+    candidates = identify_candidates(G, sorted_vertices, delta, l, k)
     print(f"Numero di candidati: {len(candidates)}")
 
-    # PARTE NUOVA
-    p = len(candidates)
-    p_1 = 0
-    q = int(math.log(G.number_of_nodes()))
+    # Step 4: Inizio parte iterativa dell'algoritmo
+    p = len(candidates)  # Numero vertici candidati
+    p_1 = 0  # Numero nuovi vertici candidati
+    q = int(math.log(G.number_of_nodes()))  # Numero nuovi vertici estratti casualmente dal grafo
     i = 2
     print(f"Partenza: (p - p') = ({p} - {p_1}) = {(p - p_1)}")
-    while (p - p_1) > q:  # prima <=
+    while (p - p_1) > q:
         p = len(candidates)
         print(f"Numero di candidati: {len(candidates)}")
         print(f"Numero vecchi campioni: {l} - Numero campioni aggiuntivi: {q}")
         print(f"Inizio Rand {i}")
-        avg_distances, max_distances = rand.update_centrality_estimates(G, q, avg_distances, max_distances, l)
+        # Nuova esecuzione di RAND per aggiornare distanze medie e massime usando i nuovi campioni estratti
+        avg_distances, max_distances = update_centrality_estimates(G, q, avg_distances, max_distances, l)
         l = l + q
         print(f"Nuovo l: {l}")
+        # Calcolo del nuovo delta sulla base di quanto ottenuto in RAND
         delta = min(delta, 1 * min(max_distance for max_distance in max_distances.values()))
         print(f"Nuovo delta: {delta}")
         # Ordinamento dei vertici in base alla distanza media (crescente)
         sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
 
-        candidates = identify_candidates(sorted_vertices, delta, l)
+        # Definizione del nuovo insieme di vertici candidati
+        candidates = identify_candidates(G, sorted_vertices, delta, l, k)
         print(f"Nuovo numero di candidati: {len(candidates)}")
 
         p_1 = len(candidates)
         print(f"(p - p') = ({p} - {p_1}) = {(p - p_1)}")
-        i = i+1
+        i = i + 1
 
     print("Fine ciclo")
 
-    # Step X: Calcolo delle distanze esatte per il set di vertici candidati
+    # Step 5: Calcolo delle distanze esatte per il set di vertici candidati
     print("Calcolo delle distanze esatte per il set di vertici candidati")
     exact_distances = compute_exact_distances(G, candidates)
 
-    # Step Y: Selezione dei Top-k vertici
+    # Step 6: Selezione dei Top-k vertici
     top_k_vertices = select_top_k_vertices(exact_distances, k)
 
     return top_k_vertices
@@ -72,7 +73,7 @@ def rand_and_order_vertices_by_average_distance(G, l):
     """
     Ordina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
     """
-    avg_distances, max_distances = rand.randAlgorithm(G, l)
+    avg_distances, max_distances = randAlgorithm(G, l)
 
     # Stampa dei primi 10 risultati come esempio
     # print("Valori non ordinati")
@@ -85,67 +86,6 @@ def rand_and_order_vertices_by_average_distance(G, l):
     # print(sorted_vertices[:10])
 
     return sorted_vertices, max_distances, avg_distances
-
-
-def identify_candidates(sorted_vertices, delta, l):
-    """
-    Identifica i candidati (insieme E) sulla base della condizione:
-    𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
-    """
-    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
-    # print("f(ℓ) = ", f_l)
-
-    # Estrazione della distanza media stimata per v_k (k-esimo vertice)
-    a_vk = sorted_vertices[k - 1][1]
-
-    # Calcolo della soglia
-    threshold = a_vk + 1 * f_l * delta  # coeff originale = 2
-    # print(f"Soglia per i candidati: {threshold}")
-
-    # Insieme dei candidati
-    candidates = []
-    # Selezione dei vertici che soddisfano la condizione
-    for v, avg_distance in sorted_vertices:
-        if avg_distance <= threshold:
-            candidates.append(v)
-
-    return candidates
-
-
-def compute_exact_distances(G, candidates):
-    """
-    Calcola le distanze esatte per i candidati in E usando l'algoritmo Dijkstra.
-    Restituisce un dizionario con i nodi e le distanze calcolate.
-    """
-    exact_distances = {}
-
-    for v in candidates:
-        distances = nx.single_source_dijkstra_path_length(G, v, weight='weight')
-        exact_distances[v] = distances
-
-    return exact_distances
-
-
-def select_top_k_vertices(exact_distances, k):
-    """
-    Seleziona i top k vertici in base alla distanza esatta dalla centralità di vicinanza.
-    Ordinamento dei candidati in base alla loro distanza media esatta.
-    """
-    # Creazione lista di tuple (vertice, distanza media)
-    vertices_with_distances = []
-
-    for v, distances in exact_distances.items():
-        # Calcolo della distanza media per ogni vertice
-        avg_distance = np.mean(list(distances.values()))
-        vertices_with_distances.append((v, avg_distance))
-
-    # Ordinamento dei vertici in ordine crescente rispetto alla loro distanza media
-    sorted_candidates = sorted(vertices_with_distances, key=lambda x: x[1])
-
-    # Selezione dei primi k vertici
-    top_k_vertices = sorted_candidates[:k]
-
-    return top_k_vertices
 
 
 if '__main__' == __name__:

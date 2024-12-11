@@ -33,7 +33,7 @@ def randAlgorithm(G, l):
 
 def update_centrality_estimates(G, q, inverse_centrality_estimates, max_distances, l):
     """
-    Aggiorna le stime delle inverse delle centralità e delle distanze massime
+    Aggiorna le stime delle distanze medie e delle distanze massime
     aggiungendo q nuovi vertici al campionamento, considerando anche le distanze massime precedenti.
     """
     n = G.number_of_nodes()
@@ -54,7 +54,6 @@ def update_centrality_estimates(G, q, inverse_centrality_estimates, max_distance
         max_distances[vi] = max(max_distances.get(vi, 0), max(distances.values()))
 
     return inverse_centrality_estimates, max_distances
-
 
 
 def compute_sssp(G, source):
