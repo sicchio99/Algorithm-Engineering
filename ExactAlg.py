@@ -43,7 +43,7 @@ def centrality_closeness(G, exact_distances):
 
 if __name__ == "__main__":
 
-    with open(f"graphs/graph_test10.pkl", "rb") as f:
+    with open(f"graphs/graph_15000.pkl", "rb") as f:
         G = pickle.load(f)
 
     num_nodi = G.number_of_nodes()
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     # Salvataggio dei risultati in un file nella cartella results
-    output_file = os.path.join(output_dir, "centrality_results_10.txt")
+    output_file = os.path.join(output_dir, "centrality_results_15000.txt")
     with open(output_file, "w") as f:
         f.write("Nodo\tCentralità\tDistanza Media\n")
         for node, centrality in sorted_results:

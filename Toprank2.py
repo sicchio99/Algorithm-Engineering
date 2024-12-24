@@ -89,7 +89,8 @@ def rand_and_order_vertices_by_average_distance(G, l):
 
 
 if '__main__' == __name__:
-    with open(f"graphs/graph_test1.pkl", "rb") as f:
+    # with open(f"custom_graphs/graph_test1.pkl", "rb") as f:
+    with open(f"graphs/graph_10000.pkl", "rb") as f:
         G = pickle.load(f)
 
     num_nodi = G.number_of_nodes()

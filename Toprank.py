@@ -59,7 +59,8 @@ def Toprank(G, k):
 
 
 if __name__ == "__main__":
-    with open(f"graphs/graph_test1.pkl", "rb") as f:
+    #with open(f"custom_graphs/graph_test1.pkl", "rb") as f:
+    with open(f"graphs/graph_10000.pkl", "rb") as f:
         G = pickle.load(f)
 
     num_nodi = G.number_of_nodes()
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     k = 10
     print("Valore K:", k)
 
-    for j in range(1, 4):
+    for j in range(1, 2):
         print(f"ESECUZIONE {j}")
         start = datetime.now()
         result = Toprank(G, k)
