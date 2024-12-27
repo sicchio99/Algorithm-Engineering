@@ -21,43 +21,45 @@ def Toprank2(G, k):
     print("Fine esecuzione RAND")
 
     # Step 2: Calcolo di Δ
-    delta = 1 * min(max_distance for max_distance in max_distances.values())  # coeff originale = 2
+    delta = 2 * min(max_distance for max_distance in max_distances.values())
     print(f"Il valore di Δ è: {delta}")
 
     # Step 3: Computazione del set di vertici candidati
     candidates = identify_candidates(G, sorted_vertices, delta, l, k)
-    print(f"Numero di candidati: {len(candidates)}")
+    print(f"Numero di candidati iniziale: {len(candidates)}")
 
     # Step 4: Inizio parte iterativa dell'algoritmo
     p = len(candidates)  # Numero vertici candidati
     p_1 = 0  # Numero nuovi vertici candidati
     q = int(math.log(G.number_of_nodes()))  # Numero nuovi vertici estratti casualmente dal grafo
     i = 2
-    print(f"Partenza: (p - p') = ({p} - {p_1}) = {(p - p_1)}")
+    # print(f"Partenza: (p - p') = ({p} - {p_1}) = {(p - p_1)}")
     while (p - p_1) > q:
         p = len(candidates)
-        print(f"Numero di candidati: {len(candidates)}")
-        print(f"Numero vecchi campioni: {l} - Numero campioni aggiuntivi: {q}")
-        print(f"Inizio Rand {i}")
+        # print(f"Numero di candidati: {len(candidates)}")
+        # print(f"Numero vecchi campioni: {l} - Numero campioni aggiuntivi: {q}")
+        # print(f"Inizio Rand {i}")
         # Nuova esecuzione di RAND per aggiornare distanze medie e massime usando i nuovi campioni estratti
         avg_distances, max_distances = update_centrality_estimates(G, q, avg_distances, max_distances, l)
         l = l + q
-        print(f"Nuovo l: {l}")
+        # print(f"Nuovo l: {l}")
         # Calcolo del nuovo delta sulla base di quanto ottenuto in RAND
-        delta = min(delta, 1 * min(max_distance for max_distance in max_distances.values()))
-        print(f"Nuovo delta: {delta}")
+        delta = min(delta, 2 * min(max_distance for max_distance in max_distances.values()))
+        # print(f"Nuovo delta: {delta}")
         # Ordinamento dei vertici in base alla distanza media (crescente)
         sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
 
         # Definizione del nuovo insieme di vertici candidati
         candidates = identify_candidates(G, sorted_vertices, delta, l, k)
-        print(f"Nuovo numero di candidati: {len(candidates)}")
+        # print(f"Nuovo numero di candidati: {len(candidates)}")
 
         p_1 = len(candidates)
-        print(f"(p - p') = ({p} - {p_1}) = {(p - p_1)}")
+        # print(f"(p - p') = ({p} - {p_1}) = {(p - p_1)}")
         i = i + 1
 
-    print("Fine ciclo")
+    # print("Fine ciclo")
+
+    print(f"Nuovo numero di vertici candidati: {len(candidates)}")
 
     # Step 5: Calcolo delle distanze esatte per il set di vertici candidati
     print("Calcolo delle distanze esatte per il set di vertici candidati")
@@ -97,10 +99,6 @@ if '__main__' == __name__:
     print(f"Il grafo ha {num_nodi} nodi.")
     num_arch = G.number_of_edges()
     print(f"Il grafo ha {num_arch} archi.")
-
-    """
-    Aggiungere eventuale visualizzazione del grafo
-    """
 
     k = 10
     print("Valore K:", k)

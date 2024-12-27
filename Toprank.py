@@ -41,7 +41,7 @@ def Toprank(G, k):
     print("Fine esecuzione RAND")
 
     # Step 2: Calcolo di Δ
-    delta = 1 * min(max_distance for max_distance in max_distances.values())  # coeff originale = 2
+    delta = 2 * min(max_distance for max_distance in max_distances.values())
     print(f"Il valore di Δ è: {delta}")
 
     # Step 3: Computazione del set di vertici candidati
@@ -68,19 +68,13 @@ if __name__ == "__main__":
     num_arch = G.number_of_edges()
     print(f"Il grafo ha {num_arch} archi.")
 
-    """
-    Aggiungere eventuale visualizzazione del grafo
-    """
-
     k = 10
     print("Valore K:", k)
 
-    for j in range(1, 2):
-        print(f"ESECUZIONE {j}")
-        start = datetime.now()
-        result = Toprank(G, k)
-        end = datetime.now()
-        for i, (vertex, avg_distance) in enumerate(result, start=1):
-            print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
-        duration = end - start
-        print(f"Durata Totale {j}: {duration.total_seconds()}")
+    start = datetime.now()
+    result = Toprank(G, k)
+    end = datetime.now()
+    for i, (vertex, avg_distance) in enumerate(result, start=1):
+        print(f"v{i}: Nodo originale: {vertex}, Distanza media esatta: {avg_distance}")
+    duration = end - start
+    print(f"Durata Totale: {duration.total_seconds()}")
