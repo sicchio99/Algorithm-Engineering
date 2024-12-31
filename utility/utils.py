@@ -8,7 +8,7 @@ def identify_candidates(G, sorted_vertices, delta, l, k):
     Identifica i candidati (insieme E) sulla base della condizione:
     𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
     """
-    f_l = 1.1 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
+    f_l = 1.25 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
     #print("f(ℓ) = ", f_l)
 
     # Estrazione della distanza media stimata per v_k (k-esimo vertice)

@@ -4,6 +4,7 @@ import os
 import pickle
 from datetime import datetime
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def calculate_position_difference(result, graph):
@@ -44,42 +45,51 @@ def calculate_position_difference(result, graph):
     return total_difference
 
 
+def save_table_as_image(df, filename):
+    """
+    Salva una tabella pandas come immagine PNG.
+    :param df: DataFrame pandas
+    :param filename: Percorso del file PNG
+    """
+    fig, ax = plt.subplots(figsize=(10, len(df) * 0.6))
+    ax.axis('tight')
+    ax.axis('off')
+    table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.auto_set_column_width(col=list(range(len(df.columns))))
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close()
+
+
 if __name__ == '__main__':
 
     exp_start = datetime.now()
 
-    # k_value = [3, 5, 10, 15, 20, 30, 50]
-    k_value = [3, 5, 10, 15, 20]
+    k_value = [3, 5, 10, 15, 20, 50]
     differences = []
     results = []
     durations = []
     # Step 1: import dei grafi
     graphs = []
-    """
-    for filename in os.listdir("graphs"):
-        # Verifica che il file abbia estensione .pkl
-        if filename.endswith(".pkl"):
-            file_path = os.path.join("graphs", filename)
-            # Carica il grafo e aggiungilo all'array
-            with open(file_path, "rb") as f:
-                G = pickle.load(f)
-                graphs.append(G)
-    """
-    with open(f"graphs/graph_2500.pkl", "rb") as f:
-        G = pickle.load(f)
-        graphs.append(G)
-    with open(f"graphs/graph_5000.pkl", "rb") as f:
-        G = pickle.load(f)
-        graphs.append(G)
-    with open(f"graphs/graph_10000.pkl", "rb") as f:
-        G = pickle.load(f)
-        graphs.append(G)
+    # Recupera e ordina i file per numero
+    graph_files = [filename for filename in os.listdir("graphs") if filename.endswith(".pkl")]
+    graph_files_sorted = sorted(graph_files, key=lambda x: int(x.split('_')[1].split('.')[0]))
+
+    # Carica i grafi in ordine
+    for filename in graph_files_sorted:
+        file_path = os.path.join("graphs", filename)
+        with open(file_path, "rb") as f:
+            G = pickle.load(f)
+            graphs.append(G)
+
+    print("Grafi caricati nell'ordine:", [g.number_of_nodes() for g in graphs])
 
     # Step 2: inizio ciclo (per ogni k e per ogni grafo)
     for k in k_value:
-        print("--------------------")
+        print("------------------------------")
         print(f"Test per k = {k}")
-        print("--------------------")
+        print("------------------------------")
         for graph in graphs:
 
             # Step 2.1 applicazione degli algoritmi di ranking
@@ -130,6 +140,7 @@ if __name__ == '__main__':
     os.makedirs(output_dir, exist_ok=True)
 
     for k in k_value:
+        # Step 3.1 Grafico delle durate degli algoritmi al variare di n
         durations_k = [dur for dur in durations if dur[0] == k]
         x = [dur[1] for dur in durations_k]  # Numero di nodi
         y1 = [dur[2] for dur in durations_k]  # Durata Toprank
@@ -146,7 +157,7 @@ if __name__ == '__main__':
         plt.savefig(os.path.join(output_dir, f"durations_k_{k}.png"))
         plt.show()
 
-        # Step 3.2: Grafico qualità del risultato
+        # Step 3.2: Grafico qualità del risultato a variare di n
         # Filtra le differenze per il valore corrente di k
         differences_k = [diff for diff in differences if diff[0] == k]
         x = [diff[1] for diff in differences_k]  # Numero di nodi
@@ -164,8 +175,24 @@ if __name__ == '__main__':
         plt.savefig(os.path.join(output_dir, f"differences_k_{k}.png"))
         plt.show()
 
+        # Step 3.3: Tabella riassuntiva con k fisso
+        data = [(
+            dur[1],  # Numero di nodi
+            dur[2],  # Durata Toprank
+            dur[3],  # Durata Toprank2
+            diff[2],  # Differenza Toprank
+            diff[3]  # Differenza Toprank2
+        ) for dur, diff in zip(durations, differences) if dur[0] == k]
+
+        df = pd.DataFrame(data, columns=[
+            "Numero di nodi", "Durata Toprank (s)", "Durata Toprank2 (s)",
+            "Differenza Toprank", "Differenza Toprank2"
+        ])
+        output_path = os.path.join(output_dir, f"table_k_{k}.png")
+        save_table_as_image(df, output_path)
+
     for graph in graphs:
-        # 3.3 Durate degli algoritmi al variare di k
+        # 3.4 Durate degli algoritmi al variare di k
         num_nodes = graph.number_of_nodes()
         durations_graph = [dur for dur in durations if dur[1] == num_nodes]
         x = [dur[0] for dur in durations_graph]  # Valori di k
@@ -183,7 +210,7 @@ if __name__ == '__main__':
         plt.savefig(os.path.join(output_dir, f"durations_nodes_{num_nodes}.png"))
         plt.show()
 
-        # 3.4 Differenze dei risultati al variare di k (nuovo grafico)
+        # 3.5 Differenze dei risultati al variare di k (nuovo grafico)
         differences_graph = [diff for diff in differences if diff[1] == num_nodes]
         x = [diff[0] for diff in differences_graph]  # Valori di k
         y1 = [diff[2] for diff in differences_graph]  # Differenza Toprank
@@ -199,6 +226,23 @@ if __name__ == '__main__':
         plt.grid(True)
         plt.savefig(os.path.join(output_dir, f"differences_nodes_{num_nodes}.png"))
         plt.show()
+
+        # Step 3.6; Tabella riassuntiva con grafo (n) fisso
+        num_nodes = graph.number_of_nodes()
+        data = [(
+            dur[0],  # Valore di k
+            dur[2],  # Durata Toprank
+            dur[3],  # Durata Toprank2
+            diff[2],  # Differenza Toprank
+            diff[3]  # Differenza Toprank2
+        ) for dur, diff in zip(durations, differences) if dur[1] == num_nodes]
+
+        df = pd.DataFrame(data, columns=[
+            "Valore di k", "Durata Toprank (s)", "Durata Toprank2 (s)",
+            "Differenza Toprank", "Differenza Toprank2"
+        ])
+        output_path = os.path.join(output_dir, f"table_graph_{num_nodes}.png")
+        save_table_as_image(df, output_path)
 
     exp_end = datetime.now()
     dur_exp = exp_end - exp_start
