@@ -28,7 +28,7 @@ def create_connected_weighted_graph(num_nodes):
     return G
 
 
-def save_graph(graph, file_name, folder="custom_graphs"):
+def save_graph(graph, file_name, folder="../custom_graphs"):
     # Creazione della cartella "custom_graphs" se non esiste
     os.makedirs(folder, exist_ok=True)
     file_path = os.path.join(folder, file_name)
@@ -39,12 +39,12 @@ def save_graph(graph, file_name, folder="custom_graphs"):
 
 
 if __name__ == '__main__':
-    for i in range(1, 6):
+    for i in range(12, 13):
         nodes = random.randint(8000, 12000)
         G = create_connected_weighted_graph(nodes)
         save_graph(G, f"graph_test{i}.pkl")
 
-        with open(f"custom_graphs/graph_test{i}.pkl", "rb") as f:
+        with open(f"../custom_graphs/graph_test{i}.pkl", "rb") as f:
             loaded_graph = pickle.load(f)
 
         print(f"Grafo {i}")

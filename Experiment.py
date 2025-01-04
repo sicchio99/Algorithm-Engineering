@@ -1,5 +1,5 @@
-from Toprank import Toprank
-from Toprank2 import Toprank2
+from algotirhms.Toprank import Toprank
+from algotirhms.Toprank2 import Toprank2
 import os
 import pickle
 from datetime import datetime

@@ -24,7 +24,7 @@ def generate_graph(n, m):
     return ba_directed
 
 
-def save_graph(graph, file_name, folder="graphs"):
+def save_graph(graph, file_name, folder="../graphs"):
     # Creazione della cartella "custom_graphs" se non esiste
     os.makedirs(folder, exist_ok=True)
     file_path = os.path.join(folder, file_name)
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
         save_graph(graph, f"graph_{n}.pkl")
 
-        with open(f"graphs/graph_{n}.pkl", "rb") as f:
+        with open(f"../graphs/graph_{n}.pkl", "rb") as f:
             loaded_graph = pickle.load(f)
 
         print(f"Grafo {n} nodi")

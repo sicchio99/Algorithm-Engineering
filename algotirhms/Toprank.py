@@ -60,7 +60,7 @@ def Toprank(G, k):
 
 if __name__ == "__main__":
     #with open(f"custom_graphs/graph_test1.pkl", "rb") as f:
-    with open(f"graphs/graph_10000.pkl", "rb") as f:
+    with open(f"../graphs/graph_10000.pkl", "rb") as f:
         G = pickle.load(f)
 
     num_nodi = G.number_of_nodes()
