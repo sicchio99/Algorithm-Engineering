@@ -44,8 +44,7 @@ def compute_exact_distances(G, candidates):
 
 def select_top_k_vertices(exact_distances, k):
     """
-    Seleziona i top k vertici in base alla distanza esatta dalla centralità di vicinanza.
-    Ordinamento dei candidati in base alla loro distanza media esatta.
+    Seleziona i top k vertici in base alla centralità di vicinanza (inverso della distanza media).
     """
     # Creazione lista di tuple (vertice, distanza media)
     vertices_with_distances = []
