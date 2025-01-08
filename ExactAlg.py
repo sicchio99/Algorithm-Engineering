@@ -19,6 +19,7 @@ def compute_exact_distances(G):
 
     return exact_distances
 
+
 def centrality_closeness(G, exact_distances):
     """
     Calcola la closeness centrality e la distanza media per ogni nodo nel grafo.

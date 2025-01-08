@@ -14,10 +14,10 @@ def generate_graph(n, m):
     # Genera un grafo BA non orientato
     ba_graph = nx.barabasi_albert_graph(n=n, m=m)
 
-    # Converti in un grafo direzionato
+    # Converte il grafo in uno orientato
     ba_directed = nx.DiGraph(ba_graph)
 
-    # Aggiungi pesi casuali agli archi per simulare forza della connessione
+    # Aggiunta di pesi casuali agli archi
     for u, v in ba_directed.edges:
         ba_directed[u][v]['weight'] = random.uniform(1, 100)
 
