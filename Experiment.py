@@ -23,7 +23,7 @@ def calculate_position_difference(result, graph):
         print(f"File {filename} non trovato.")
         return None
 
-    # Leggi il file di centralità in una lista ordinata
+    # Lettura del file di centralità e conversione in una lista ordinata
     centrality_positions = {}
     with open(filepath, "r") as file:
         # Salta l'intestazione
@@ -72,11 +72,11 @@ if __name__ == '__main__':
     durations = []
     # Step 1: import dei grafi
     graphs = []
-    # Recupera e ordina i file per numero
+    # Recupero e ordinamento dei file per numero di nodi
     graph_files = [filename for filename in os.listdir("graphs") if filename.endswith(".pkl")]
     graph_files_sorted = sorted(graph_files, key=lambda x: int(x.split('_')[1].split('.')[0]))
 
-    # Carica i grafi in ordine
+    # Caricamento i grafi in ordine
     for filename in graph_files_sorted:
         file_path = os.path.join("graphs", filename)
         with open(file_path, "rb") as f:
