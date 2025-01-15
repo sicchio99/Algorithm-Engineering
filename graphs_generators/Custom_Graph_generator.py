@@ -1,11 +1,10 @@
 import networkx as nx
 import random
 import os
-import pickle  # Per la serializzazione del grafo
+import pickle
 
 
 def create_connected_weighted_graph(num_nodes):
-    # Grafo vuoto
     G = nx.Graph()
 
     G.add_nodes_from(range(num_nodes))

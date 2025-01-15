@@ -7,6 +7,7 @@ def compute_exact_distances(G):
     """
     Calcola le distanze esatte per i nodi usando l'algoritmo Dijkstra.
     Restituisce un dizionario con i nodi e le distanze calcolate.
+    :param G: Grafo da analizzare
     """
     exact_distances = {}
     nodes = list(G.nodes)
@@ -23,13 +24,14 @@ def compute_exact_distances(G):
 def centrality_closeness(G, exact_distances):
     """
     Calcola la closeness centrality e la distanza media per ogni nodo nel grafo.
+    :param G: Grafo da analizzare
+    :param exact_distances: Dizionario con i nodi e le distanze calcolate
     """
     closeness_centrality = {}
     avg_distances = {}
     n = len(G.nodes)
 
     for v, distances in exact_distances.items():
-        # print("Centralità nodo", v)
         # Somma le distanze a tutti gli altri nodi
         distance_sum = sum(distances.values())
         if distance_sum > 0:  # Per evitare divisioni per zero

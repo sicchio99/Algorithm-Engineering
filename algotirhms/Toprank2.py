@@ -1,6 +1,6 @@
 from datetime import datetime
 from utility.RAND import randAlgorithm, update_centrality_estimates
-import pickle  # Per la serializzazione del grafo
+import pickle
 import math
 from utility.utils import identify_candidates, compute_exact_distances, select_top_k_vertices
 
@@ -33,19 +33,16 @@ def Toprank2(G, k):
     p_1 = 0  # Numero nuovi vertici candidati
     q = int(math.log(G.number_of_nodes()))  # Numero nuovi vertici estratti casualmente dal grafo
     i = 2
-    # print(f"Partenza: (p - p') = ({p} - {p_1}) = {(p - p_1)}")
     while (p - p_1) > q:
         p = len(candidates)
-        # print(f"Numero di candidati: {len(candidates)}")
-        # print(f"Numero vecchi campioni: {l} - Numero campioni aggiuntivi: {q}")
-        # print(f"Inizio Rand {i}")
+
         # Nuova esecuzione di RAND per aggiornare distanze medie e massime usando i nuovi campioni estratti
         avg_distances, max_distances = update_centrality_estimates(G, q, avg_distances, max_distances, l)
         l = l + q
-        # print(f"Nuovo l: {l}")
+
         # Calcolo del nuovo delta sulla base di quanto ottenuto in RAND
         delta = min(delta, 2 * min(max_distance for max_distance in max_distances.values()))
-        # print(f"Nuovo delta: {delta}")
+
         # Ordinamento dei vertici in base alla distanza media (crescente)
         sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
 
@@ -54,10 +51,7 @@ def Toprank2(G, k):
         # print(f"Nuovo numero di candidati: {len(candidates)}")
 
         p_1 = len(candidates)
-        # print(f"(p - p') = ({p} - {p_1}) = {(p - p_1)}")
         i = i + 1
-
-    # print("Fine ciclo")
 
     print(f"Nuovo numero di vertici candidati: {len(candidates)}")
 
@@ -74,24 +68,18 @@ def Toprank2(G, k):
 def rand_and_order_vertices_by_average_distance(G, l):
     """
     Ordina i vertici di un grafo in base alla distanza media calcolata usando l'algoritmo di campionamento RAND.
+    : param G: Grafo da analizzare
+    : param l: numero di campioni estratti casualmente dal grafo
     """
     avg_distances, max_distances = randAlgorithm(G, l)
 
-    # Stampa dei primi 10 risultati come esempio
-    # print("Valori non ordinati")
-    # for node in list(avg_distances.keys())[:10]:
-    # print(f"Node {node}, Estimated Inverse Centrality: {avg_distances[node]}")
-
     # Ordinamento dei vertici in base alla distanza media (crescente)
     sorted_vertices = sorted(avg_distances.items(), key=lambda item: item[1])
-    # print("Sorted vertices")
-    # print(sorted_vertices[:10])
 
     return sorted_vertices, max_distances, avg_distances
 
 
 if '__main__' == __name__:
-    # with open(f"custom_graphs/graph_test1.pkl", "rb") as f:
     with open(f"../graphs/graph_10000.pkl", "rb") as f:
         G = pickle.load(f)
 

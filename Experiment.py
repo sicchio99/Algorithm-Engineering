@@ -5,6 +5,7 @@ import pickle
 from datetime import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
+import random
 
 
 def calculate_position_difference(result, graph):
@@ -18,7 +19,7 @@ def calculate_position_difference(result, graph):
     filename = f"centrality_results_{graph.number_of_nodes()}.txt"
     filepath = os.path.join("exact_results", filename)
 
-    # Controlla che il file esista
+    # Controllo dell'esistenza del file esista
     if not os.path.exists(filepath):
         print(f"File {filename} non trovato.")
         return None
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     differences = []
     results = []
     durations = []
+
     # Step 1: import dei grafi
     graphs = []
     # Recupero e ordinamento dei file per numero di nodi
@@ -138,6 +140,17 @@ if __name__ == '__main__':
     # Step 3: creazione dei grafci
     output_dir = "experiment_results"
     os.makedirs(output_dir, exist_ok=True)
+
+    # Generazione di un ID casuale unico e creazione della directory corrispondente
+    while True:
+        exp_id = random.randint(1000, 9999)  # Genera un numero casuale tra 1000 e 9999
+        new_output_dir = os.path.join(output_dir, f"exp_{exp_id}")
+        if not os.path.exists(new_output_dir):  # Verifica se la directory esiste già
+            os.makedirs(new_output_dir)  # Crea la nuova directory
+            break
+
+    # Aggiornamento di output_dir alla nuova directory
+    output_dir = new_output_dir
 
     for k in k_value:
         # Step 3.1 Grafico delle durate degli algoritmi al variare di n
@@ -247,3 +260,4 @@ if __name__ == '__main__':
     exp_end = datetime.now()
     dur_exp = exp_end - exp_start
     print(f"L'esperimento è durato {dur_exp}")
+    print(f"Risultati salvati in {output_dir}")

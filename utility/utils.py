@@ -5,21 +5,24 @@ import math
 
 def identify_candidates(G, sorted_vertices, delta, l, k):
     """
-    Identifica i candidati (insieme E) sulla base della condizione:
-    𝑎𝑣 ≤ 𝑎𝑣𝑘 + 2 ⋅ f(ℓ) ⋅ Δ
+    Identifica i candidati (insieme E) sulla base della condizione: 𝑎𝑣 ≤ 𝑎𝑣𝑘 + f(ℓ) ⋅ Δ
+    :param G: Grafo da analizzare
+    :param sorted_vertices: Lista ordinata di tuple (vertice, distanza media)
+    :param delta: Valore di Δ
+    :param l: Numero di campioni estratti casualmente dal grafo
+    :param k: Numero di vertici da selezionare
     """
-    f_l = 1.25 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ). alfa = 1.1, alfa > 1
-    #print("f(ℓ) = ", f_l)
+    f_l = 1.25 * math.sqrt(math.log(G.number_of_nodes()) / l)  # Funzione f(ℓ)
 
     # Estrazione della distanza media stimata per v_k (k-esimo vertice)
     a_vk = sorted_vertices[k - 1][1]
 
     # Calcolo della soglia
-    threshold = a_vk + 1 * f_l * delta  # coeff originale = 2
-    #print(f"Soglia per i candidati: {threshold}")
+    threshold = a_vk + f_l * delta
 
     # Insieme dei candidati
     candidates = []
+
     # Selezione dei vertici che soddisfano la condizione
     for v, avg_distance in sorted_vertices:
         if avg_distance <= threshold:
@@ -32,6 +35,8 @@ def compute_exact_distances(G, candidates):
     """
     Calcola le distanze esatte per i candidati in E usando l'algoritmo Dijkstra.
     Restituisce un dizionario con i nodi e le distanze calcolate.
+    :param G: Grafo da analizzare
+    :param candidates: Insieme di vertici candidati
     """
     exact_distances = {}
 
@@ -45,6 +50,8 @@ def compute_exact_distances(G, candidates):
 def select_top_k_vertices(exact_distances, k):
     """
     Seleziona i top k vertici in base alla centralità di vicinanza (inverso della distanza media).
+    :param exact_distances: Dizionario con i nodi e le distanze calcolate
+    :param k: Numero di vertici da selezionare
     """
     # Creazione lista di tuple (vertice, distanza media)
     vertices_with_distances = []
