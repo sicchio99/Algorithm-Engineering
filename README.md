@@ -32,7 +32,7 @@ Note: To use the graphs in an experiment, you first need to calculate the exact 
 
 Note: If a graph with the entered name already exists, the graph in the graphs folder will be replaced with the new one.
 
-### Calculation of Exact Solutions ##aa
+### Calculation of Exact Solutions
 
 To calculate the exact solutions for a graph, you need to edit and run the script ExactAlg.py located in the main directory.
 1. Edit the file.
